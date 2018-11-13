@@ -1,64 +1,89 @@
 import { Component, ViewChild } from '@angular/core';
-
-import { Platform, MenuController, Nav, NavParams } from 'ionic-angular';
-import { Injectable } from "@angular/core";
-import { HelloIonicPage } from '../pages/hello-ionic/hello-ionic';
-import { ListPage } from '../pages/list/list';
-import {LoginPage} from '../pages/login/login'
-import { SignupPage} from '../pages/signup/signup';
-import { SubjectsPage} from '../pages/subjects/subjects';
-import { ProfilePage } from '../pages/profile/profile';
-import { NotesPage } from '../pages/notes/notes';
-import { IdeasProjectsPage } from '../pages/ideas-projects/ideas-projects';
-import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import {LaunchPage} from '../pages/launch/launch';
-import { RecoQuestionsPage} from '../pages/reco-questions/reco-questions';
+import { StatusBar } from '@ionic-native/status-bar';
+import { TranslateService } from '@ngx-translate/core';
+import { Config, Nav, Platform } from 'ionic-angular';
+
+import { FirstRunPage } from '../pages';
+import { Settings } from '../providers';
 
 @Component({
-  templateUrl: 'app.html'
+  template: `<ion-menu [content]="content">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Pages</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <ion-list>
+        <button menuClose ion-item *ngFor="let p of pages" (click)="openPage(p)">
+          {{p.title}}
+        </button>
+      </ion-list>
+    </ion-content>
+
+  </ion-menu>
+  <ion-nav #content [root]="rootPage"></ion-nav>`
 })
-@Injectable()
 export class MyApp {
+  rootPage = FirstRunPage;
+
   @ViewChild(Nav) nav: Nav;
 
-  // make HelloIonicPage the root (or first) page
-  rootPage = HelloIonicPage;
-  pages: Array<{title: string, component: any}>;
+  pages: any[] = [
+    { title: 'Tutorial', component: 'TutorialPage' },
+    { title: 'Welcome', component: 'WelcomePage' },
+    { title: 'Tabs', component: 'TabsPage' },
+    { title: 'Social', component: 'CardsPage' },
+    { title: 'Content', component: 'ContentPage' },
+    { title: 'Login', component: 'LoginPage' },
+    { title: 'Signup', component: 'SignupPage' },
+    { title: 'Items', component: 'ListMasterPage' },
+    { title: 'Menu', component: 'MenuPage' },
+    { title: 'Settings', component: 'SettingsPage' },
+    { title: 'Search', component: 'SearchPage' }
+  ]
 
-  constructor(
-    public platform: Platform,
-    public menu: MenuController,
-    public statusBar: StatusBar,
-    public splashScreen: SplashScreen
-  ) {
-    this.initializeApp();
-
-    // set our app's pages
-    // these are used in app.html to set the side menu
-    this.pages = [
-
-      { title : 'Home',component: LaunchPage},
-      { title : 'Profile', component : ProfilePage},
-      { title: 'Questions and Answers', component: ListPage },
-      { title:'Notes',component:NotesPage},
-      { title : 'Projects and Ideas', component : IdeasProjectsPage}
-    ];
-  }
-
-  initializeApp() {
-    this.platform.ready().then(() => {
+  constructor(private translate: TranslateService, platform: Platform, settings: Settings, private config: Config, private statusBar: StatusBar, private splashScreen: SplashScreen) {
+    platform.ready().then(() => {
       // Okay, so the platform is ready and our plugins are available.
       // Here you can do any higher level native things you might need.
       this.statusBar.styleDefault();
       this.splashScreen.hide();
     });
+    this.initTranslate();
+  }
+
+  initTranslate() {
+    // Set the default language for translation strings, and the current language.
+    this.translate.setDefaultLang('en');
+    const browserLang = this.translate.getBrowserLang();
+
+    if (browserLang) {
+      if (browserLang === 'zh') {
+        const browserCultureLang = this.translate.getBrowserCultureLang();
+
+        if (browserCultureLang.match(/-CN|CHS|Hans/i)) {
+          this.translate.use('zh-cmn-Hans');
+        } else if (browserCultureLang.match(/-TW|CHT|Hant/i)) {
+          this.translate.use('zh-cmn-Hant');
+        }
+      } else {
+        this.translate.use(this.translate.getBrowserLang());
+      }
+    } else {
+      this.translate.use('en'); // Set your language here
+    }
+
+    this.translate.get(['BACK_BUTTON_TEXT']).subscribe(values => {
+      this.config.set('ios', 'backButtonText', values.BACK_BUTTON_TEXT);
+    });
   }
 
   openPage(page) {
-    // close the menu when clicking a link from the menu
-    this.menu.close();
-    // navigate to the new page if it is not the current page
+    // Reset the content nav to have just this page
+    // we wouldn't want the back button to show in this scenario
     this.nav.setRoot(page.component);
   }
 }

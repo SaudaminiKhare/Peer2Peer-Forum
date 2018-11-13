@@ -1,72 +1,50 @@
 import { Component } from '@angular/core';
-import { NavController, AlertController, LoadingController, Loading, IonicPage } from 'ionic-angular';
-import { AuthProvider } from '../../providers/auth/auth';
-import { SubjectsPage } from '../subjects/subjects';
-import { SignupPage } from '../signup/signup';
-import { Http, Headers } from '@angular/http';
-import { HelloIonicPage } from '../hello-ionic/hello-ionic';
-import {LaunchPage} from '../launch/launch';
+import { TranslateService } from '@ngx-translate/core';
+import { IonicPage, NavController, ToastController } from 'ionic-angular';
+
+import { User } from '../../providers';
+import { MainPage } from '../';
 
 @IonicPage()
 @Component({
   selector: 'page-login',
-  templateUrl: 'login.html',
+  templateUrl: 'login.html'
 })
-
 export class LoginPage {
+  // The account fields for the login form.
+  // If you're using the username field with or without email, make
+  // sure to add it to the type
+  account: { email: string, password: string } = {
+    email: 'test@example.com',
+    password: 'test'
+  };
 
-    loading: Loading;
-    email: string;
-    password: string;
+  // Our translated text strings
+  private loginErrorString: string;
 
-    constructor(public navCtrl: NavController, public authService: AuthProvider , public http: Http,private alertCtrl: AlertController, private loadingCtrl: LoadingController) {
+  constructor(public navCtrl: NavController,
+    public user: User,
+    public toastCtrl: ToastController,
+    public translateService: TranslateService) {
 
-    }
-
-
-  doLogin(){
-    //if the username and password are valid
-    //this.navCtrl.push(HelloIonicPage);
-
-    let postParams = {email : this.email, password: this.password};
-
-
-  //console.log(postParams);
-  this.authService.login(postParams).then((result) => {
-
-    let data = result["result"];
-    //console.log(result)
-    //console.log(JSON.parse(JSON.stringify(result)));
-    if(data=="Success"){
-      this.navCtrl.push(LaunchPage,{ userid: result['user_id']});
-    }
-    else if(data=="Invalid password"){
-      //console.log("y");
-      const alert = this.alertCtrl.create({
-        title: 'Incorrect Password',
-        subTitle: 'Password entered is incorrect!',
-        buttons: ['OK']
-      });
-      alert.present();
-    }
-    else{
-      const alert = this.alertCtrl.create({
-        title: 'User not registered',
-        subTitle: 'Please Signup',
-        buttons: ['OK']
-      });
-      alert.present();
-      this.navCtrl.push(SignupPage);
-    }
-
-  }, (err) => {
-    console.log("yo");
-    console.log(err);
-    });
-
-    }
-
-    doSignup(){
-      this.navCtrl.push(SignupPage);
-    }
+    this.translateService.get('LOGIN_ERROR').subscribe((value) => {
+      this.loginErrorString = value;
+    })
   }
+
+  // Attempt to login in through our User service
+  doLogin() {
+    this.user.login(this.account).subscribe((resp) => {
+      this.navCtrl.push(MainPage);
+    }, (err) => {
+      this.navCtrl.push(MainPage);
+      // Unable to log in
+      let toast = this.toastCtrl.create({
+        message: this.loginErrorString,
+        duration: 3000,
+        position: 'top'
+      });
+      toast.present();
+    });
+  }
+}

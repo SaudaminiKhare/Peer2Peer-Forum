@@ -1,55 +1,53 @@
 import { Component } from '@angular/core';
-import { NavController, AlertController, LoadingController, Loading, IonicPage } from 'ionic-angular';
-import { AuthProvider } from '../../providers/auth/auth';
-import { LoginPage} from '../login/login';
-import { SubjectsPage } from '../subjects/subjects';
-import { HelloIonicPage } from '../hello-ionic/hello-ionic';
+import { TranslateService } from '@ngx-translate/core';
+import { IonicPage, NavController, ToastController } from 'ionic-angular';
 
-/**
- * Generated class for the SignupPage page.
- *
- * See https://ionicframework.com/docs/components/#navigation for more info on
- * Ionic pages and navigation.
- */
+import { User } from '../../providers';
+import { MainPage } from '../';
 
 @IonicPage()
 @Component({
   selector: 'page-signup',
-  templateUrl: 'signup.html',
+  templateUrl: 'signup.html'
 })
 export class SignupPage {
+  // The account fields for the login form.
+  // If you're using the username field with or without email, make
+  // sure to add it to the type
+  account: { name: string, email: string, password: string } = {
+    name: 'Test Human',
+    email: 'test@example.com',
+    password: 'test'
+  };
 
-  email:string;
-  password:string;
-  name: string ;
-  constructor(public navCtrl: NavController, public authService: AuthProvider, public alertCtrl : AlertController ) {
+  // Our translated text strings
+  private signupErrorString: string;
+
+  constructor(public navCtrl: NavController,
+    public user: User,
+    public toastCtrl: ToastController,
+    public translateService: TranslateService) {
+
+    this.translateService.get('SIGNUP_ERROR').subscribe((value) => {
+      this.signupErrorString = value;
+    })
   }
 
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad SignupPage');
-  }
-
-  doSignup(){
-    let details = {email : this.email, password: this.password, username: this.name};
-
-
-    this.authService.createAccount(details).then((result) => {
-
-      let data = result["result"];
-    //console.log(result)
-    console.log(JSON.parse(JSON.stringify(result)));
-    if(data=="Success"){
-      const alert = this.alertCtrl.create({
-        title: 'Successfully Registered',
-        buttons: ['OK']
-      });
-      alert.present();
-      this.navCtrl.push(HelloIonicPage,{userid:result['user_id']});
-    }
+  doSignup() {
+    // Attempt to login in through our User service
+    this.user.signup(this.account).subscribe((resp) => {
+      this.navCtrl.push(MainPage);
     }, (err) => {
-      console.log(err)
+
+      this.navCtrl.push(MainPage);
+
+      // Unable to sign up
+      let toast = this.toastCtrl.create({
+        message: this.signupErrorString,
+        duration: 3000,
+        position: 'top'
+      });
+      toast.present();
     });
-
   }
-
-  }
+}
