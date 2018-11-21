@@ -21,7 +21,7 @@
     <form novalidate (ngSubmit)="doLogin()" [formGroup]="loginform">
         <ion-list>
         <ion-item>
-          <ion-label><ion-icon name="person"></ion-icon></ion-label>
+          <ion-label><ion-icon name="at"></ion-icon></ion-label>
           <ion-input [(ngModel)]="email" name="email" placeholder="Email" type="email" formControlName="email" [class.error1]="!loginform.controls.email.valid && loginform.controls.email.dirty"></ion-input>
         </ion-item>
         <ion-item no-lines *ngIf="(loginform.get('email').hasError('pattern') ||loginform.get('email').hasError('required') ) && loginform.get('email').touched">
